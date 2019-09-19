@@ -1,0 +1,101 @@
+Description: Collected Debian patches for xdg-utils
+Author: Nicholas Guriev <guriev-ns@ya.ru>
+
+The xdg-utils package is maintained in Git rather than maintaining
+patches as separate files, and separating the patches doesn't seem to
+be worth the effort.  They are therefore all included in this single
+Debian patch.
+
+For full commit history and separated commits, see the packaging Git
+repository.
+--- xdg-utils-1.1.3.orig/autotests/t-xdg-open.sh
++++ xdg-utils-1.1.3/autotests/t-xdg-open.sh
+@@ -129,13 +129,6 @@ mock_desktop_file mosaic %u
+ mock_default_app x-scheme-handler/http mosaic
+ test_open_url generic mosaic
+ 
+-test_that_it always uses \$BROWSER if set in generic mode
+-BROWSER=cyberdog
+-mock_desktop_file mosaic %u
+-mock_default_app x-scheme-handler/http mosaic
+-mock mosaic
+-test_open_url generic cyberdog
+-
+ test_that_it works with multi-word \$BROWSER commands
+ BROWSER="cyberdog --url %s"
+ test_open_url generic cyberdog --url
+@@ -146,6 +139,15 @@ mock cyberdog
+ BROWSER="cyberdog --url %s"
+ run generic xdg-open 'http://www.freedesktop.org/; echo BUSTED'
+ assert_run cyberdog --url 'http://www.freedesktop.org/; echo BUSTED'
++unmock cyberdog
++
++test_that_it is not vulnerable to argument injection in URLs when using \
++             \$BROWSER in generic mode
++mock cyberdog
++BROWSER="cyberdog --url %s"
++run generic xdg-open 'http://www.freedesktop.org/   --evil-option'
++assert_run cyberdog --url 'http://www.freedesktop.org/   --evil-option'
++unmock cyberdog
+ 
+ test_that_it opens files in generic mode
+ test_generic_open_file test.txt
+--- xdg-utils-1.1.3.orig/scripts/xdg-email.in
++++ xdg-utils-1.1.3/scripts/xdg-email.in
+@@ -91,13 +91,13 @@ open_kde()
+     fi
+ 
+     if which $kreadconfig >/dev/null 2>&1; then
+-        local profile=$($kreadconfig --file emaildefaults \
+-                                     --group Defaults --key Profile)
++        local profile="$($kreadconfig --file emaildefaults \
++                                      --group Defaults --key Profile)"
+         if [ -n "$profile" ]; then
+-            local client=$($kreadconfig --file emaildefaults \
+-                                        --group "PROFILE_$profile" \
+-                                        --key EmailClient \
+-                                  | cut -d ' ' -f 1)
++            local client="$($kreadconfig --file emaildefaults \
++                                         --group "PROFILE_$profile" \
++                                         --key EmailClient \
++                                  | cut -d ' ' -f 1)"
+ 
+             if echo "$client" | grep -Eq 'thunderbird|icedove'; then
+                 run_thunderbird "$client" "$1"
+--- xdg-utils-1.1.3.orig/scripts/xdg-open.in
++++ xdg-utils-1.1.3/scripts/xdg-open.in
+@@ -366,13 +366,9 @@ open_generic_xdg_x_scheme_handler()
+     fi
+ }
+ 
+-has_single_argument()
+-{
+-  test $# = 1
+-}
+-
+ open_envvar()
+ {
++    local url="$1"
+     local oldifs="$IFS"
+     local browser browser_with_arg
+ 
+@@ -385,12 +381,15 @@ open_envvar()
+         fi
+ 
+         if echo "$browser" | grep -q %s; then
+-            # Avoid argument injection.
++            # Use loop to insert URL for avoid argument injection.
+             # See https://bugs.freedesktop.org/show_bug.cgi?id=103807
+-            # URIs don't have IFS characters spaces anyway.
+-            has_single_argument $1 && $(printf "$browser" "$1")
++            shift $#
++            for arg in $browser; do
++                set -- "$@" "$(printf -- "$arg" "$url")"
++            done
++            "$@"
+         else
+-            $browser "$1"
++            $browser "$url"
+         fi
+ 
+         if [ $? -eq 0 ]; then

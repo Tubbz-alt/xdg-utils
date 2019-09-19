@@ -1,0 +1,3 @@
+version=3
+opts="uversionmangle=s/-rc/\~rc/" \
+	http://portland.freedesktop.org/download/xdg-utils-(\d[\d.]*(?:-rc\d+)?)\.tar\.gz
