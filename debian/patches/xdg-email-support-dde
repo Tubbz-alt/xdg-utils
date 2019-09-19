@@ -1,0 +1,14 @@
+Description: xdg-email support dde
+Author: electricface <songwentai@deepin.com>
+
+--- xdg-utils-1.1.3.orig/scripts/xdg-email.in
++++ xdg-utils-1.1.3/scripts/xdg-email.in
+@@ -484,7 +484,7 @@ case "$DE" in
+     open_flatpak "$url"
+     ;;
+ 
+-    generic|lxqt|enlightenment)
++    generic|lxqt|enlightenment|dde)
+     open_generic "${mailto}"
+     ;;
+ 
