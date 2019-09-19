@@ -8,7 +8,7 @@ Author: electricface <songwentai@deepin.com>
  
  $(T): remove-failed-tests
 -	@sh $@
-+	@sh $@ || echo
++	sh $@ || echo
  
  clean: remove-failed-tests
  	rm -fr lab
