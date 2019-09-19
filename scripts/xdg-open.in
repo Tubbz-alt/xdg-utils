@@ -366,9 +366,13 @@ open_generic_xdg_x_scheme_handler()
     fi
 }
 
+has_single_argument()
+{
+  test $# = 1
+}
+
 open_envvar()
 {
-    local url="$1"
     local oldifs="$IFS"
     local browser browser_with_arg
 
@@ -381,15 +385,12 @@ open_envvar()
         fi
 
         if echo "$browser" | grep -q %s; then
-            # Use loop to insert URL for avoid argument injection.
+            # Avoid argument injection.
             # See https://bugs.freedesktop.org/show_bug.cgi?id=103807
-            shift $#
-            for arg in $browser; do
-                set -- "$@" "$(printf -- "$arg" "$url")"
-            done
-            "$@"
+            # URIs don't have IFS characters spaces anyway.
+            has_single_argument $1 && $(printf "$browser" "$1")
         else
-            $browser "$url"
+            $browser "$1"
         fi
 
         if [ $? -eq 0 ]; then

@@ -129,6 +129,13 @@ mock_desktop_file mosaic %u
 mock_default_app x-scheme-handler/http mosaic
 test_open_url generic mosaic
 
+test_that_it always uses \$BROWSER if set in generic mode
+BROWSER=cyberdog
+mock_desktop_file mosaic %u
+mock_default_app x-scheme-handler/http mosaic
+mock mosaic
+test_open_url generic cyberdog
+
 test_that_it works with multi-word \$BROWSER commands
 BROWSER="cyberdog --url %s"
 test_open_url generic cyberdog --url
@@ -139,15 +146,6 @@ mock cyberdog
 BROWSER="cyberdog --url %s"
 run generic xdg-open 'http://www.freedesktop.org/; echo BUSTED'
 assert_run cyberdog --url 'http://www.freedesktop.org/; echo BUSTED'
-unmock cyberdog
-
-test_that_it is not vulnerable to argument injection in URLs when using \
-             \$BROWSER in generic mode
-mock cyberdog
-BROWSER="cyberdog --url %s"
-run generic xdg-open 'http://www.freedesktop.org/   --evil-option'
-assert_run cyberdog --url 'http://www.freedesktop.org/   --evil-option'
-unmock cyberdog
 
 test_that_it opens files in generic mode
 test_generic_open_file test.txt

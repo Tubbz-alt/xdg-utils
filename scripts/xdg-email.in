@@ -91,13 +91,13 @@ open_kde()
     fi
 
     if which $kreadconfig >/dev/null 2>&1; then
-        local profile="$($kreadconfig --file emaildefaults \
-                                      --group Defaults --key Profile)"
+        local profile=$($kreadconfig --file emaildefaults \
+                                     --group Defaults --key Profile)
         if [ -n "$profile" ]; then
-            local client="$($kreadconfig --file emaildefaults \
-                                         --group "PROFILE_$profile" \
-                                         --key EmailClient \
-                                  | cut -d ' ' -f 1)"
+            local client=$($kreadconfig --file emaildefaults \
+                                        --group "PROFILE_$profile" \
+                                        --key EmailClient \
+                                  | cut -d ' ' -f 1)
 
             if echo "$client" | grep -Eq 'thunderbird|icedove'; then
                 run_thunderbird "$client" "$1"
